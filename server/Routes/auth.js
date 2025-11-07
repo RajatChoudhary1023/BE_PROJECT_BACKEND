@@ -31,6 +31,7 @@ router.post("/register", verify_firebase, async (req, res) => {
       user = new auth({
         name,
         email,
+        phone
       });
 
       // Optional fingerprint info
