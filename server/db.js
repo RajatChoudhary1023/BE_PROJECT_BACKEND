@@ -1,5 +1,6 @@
 const mongoose=require('mongoose')
-const mongoURI="mongodb+srv://rajatchoudhary2022comp_db_user:RcKz6puLDpIbOQnb@beproject.m7nu3ky.mongodb.net/?appName=BEPROJECT"
+require("dotenv").config();
+const mongoURI=process.env.MONGODB_URI
 
 const connection=()=> {
     mongoose.connect(mongoURI)
