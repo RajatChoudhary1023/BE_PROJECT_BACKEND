@@ -23,18 +23,18 @@ const retailerSchema = new mongoose.Schema({
   },
 
   // 🏦 Bank or payment info
-  bank_name: {
-    type: String,
-  },
-  account_number: {
-    type: String,
-  },
-  ifsc_code: {
-    type: String,
-  },
-  upi_id: {
-    type: String,
-  },
+  // bank_name: {
+  //   type: String,
+  // },
+  // account_number: {
+  //   type: String,
+  // },
+  // ifsc_code: {
+  //   type: String,
+  // },
+  // upi_id: {
+  //   type: String,
+  // },
 
   // 📍 Store location
   address: {

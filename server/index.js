@@ -9,6 +9,7 @@ app.use(cors())
 app.use(express.json())
 app.use('/api/auth',require('./Routes/auth'))
 app.use('/api/retailer_auth',require('./Retailer_Routes/auth'))
+app.use('/api/retailer',require('./Retailer_Routes/register_fingerprint'))
 // app.use('/api/Practicd',require('./Routes/Practice'))
 
 app.get('/',(req,res)=> {

@@ -15,10 +15,10 @@ router.post("/register_retailer", verify_firebase, async (req, res) => {
       shop_name,
       owner_name,
       phone,
-      bank_name,
-      account_number,
-      ifsc_code,
-      upi_id,
+      // bank_name,
+      // account_number,
+      // ifsc_code,
+      // upi_id,
       address,
       city,
       state,
@@ -45,10 +45,10 @@ router.post("/register_retailer", verify_firebase, async (req, res) => {
         owner_name,
         email,
         phone,
-        bank_name,
-        account_number,
-        ifsc_code,
-        upi_id,
+        // bank_name,
+        // account_number,
+        // ifsc_code,
+        // upi_id,
         address,
         city,
         state,
@@ -61,10 +61,10 @@ router.post("/register_retailer", verify_firebase, async (req, res) => {
       retailer.shop_name = shop_name || retailer.shop_name;
       retailer.owner_name = owner_name || retailer.owner_name;
       retailer.phone = phone || retailer.phone;
-      retailer.bank_name = bank_name || retailer.bank_name;
-      retailer.account_number = account_number || retailer.account_number;
-      retailer.ifsc_code = ifsc_code || retailer.ifsc_code;
-      retailer.upi_id = upi_id || retailer.upi_id;
+      // retailer.bank_name = bank_name || retailer.bank_name;
+      // retailer.account_number = account_number || retailer.account_number;
+      // retailer.ifsc_code = ifsc_code || retailer.ifsc_code;
+      // retailer.upi_id = upi_id || retailer.upi_id;
       retailer.address = address || retailer.address;
       retailer.city = city || retailer.city;
       retailer.state = state || retailer.state;

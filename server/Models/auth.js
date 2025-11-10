@@ -23,7 +23,13 @@ const userschema = mongoose.Schema({
   isfingerprint_registered:{
     type:Boolean,
     default:false
-  }
+  },
+  verification_code: {
+    type: String,
+  },
+  code_expiry: {
+    type: Date,
+  },
 });
 
 module.exports=mongoose.model('auth',userschema)
