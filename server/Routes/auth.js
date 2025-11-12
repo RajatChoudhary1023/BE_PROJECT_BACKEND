@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 const crypto = require("crypto");
 const auth = require("../Models/auth");
+const Wallet=require('../Models/wallet')
 const verify_firebase = require("../Middleware/verify-firebase");
 const router = express.Router();
 
@@ -51,7 +52,7 @@ router.post("/register", verify_firebase, async (req, res) => {
       user = new auth({
         name,
         email,
-        phone
+        phone,
       });
 
       // Optional fingerprint info
@@ -61,6 +62,12 @@ router.post("/register", verify_firebase, async (req, res) => {
       }
 
       await user.save();
+      // ✅ Create wallet for this new user
+      const wallet = new Wallet({
+        user: user._id,
+        balance: 0, // initial balance
+      });
+      await wallet.save();
     }
 
     res.status(201).json({
