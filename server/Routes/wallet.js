@@ -65,4 +65,18 @@ router.post("/add_to_wallet", verify_firebase, async (req, res) => {
     }
   });
 
+  router.get("/check_balance",verify_firebase,async (req,res)=> {
+    // router.get("/check_balance",async (req,res)=> {
+
+    const { email }=req.user;
+    // const email ="c.rajat1006@gmail.com";
+    const user=await auth.findOne({ email })
+    if (!user) {
+      return res.status(404).json({success:"false",message:"User not found"})
+    }
+    const wallet=await Wallet.findOne({user:user._id})
+    const balance=wallet.balance;
+    return res.status(500).json({success:true,balance:balance})
+  })
+
 module.exports=router

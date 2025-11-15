@@ -78,4 +78,41 @@ router.post("/verify_code_and_register_fingerprint", async (req, res) => {
     }
   });
   
+
+  router.post('/send_code_to_device',async (req,res)=> {
+    try {
+      const {code}=req.body;
+      if (!code) {
+        return res.status(404).json({success:false,message:"Verification Code not found"})
+      }
+      const hashedCode = hashCode(code);
+      // Find user with that hashed code
+      const user = await auth.findOne({ verification_code: hashedCode });
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid or expired verification code",
+        });
+      }
+  
+      // Check if code expired
+      if (user.code_expiry < new Date()) {
+        return res.status(400).json({
+          success: false,
+          message: "Verification code has expired",
+        });
+      }
+      res.status(200).json({success:true,message:"Code Sent to device successfully",code:code,user: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+      },})
+    } catch (error) {
+      console.error("Error in sending code to device:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  })
   module.exports = router;

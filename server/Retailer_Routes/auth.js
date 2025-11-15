@@ -1,6 +1,7 @@
 const express = require("express");
 require("dotenv").config();
 const Retailer = require('../Retailer_Models/auth')
+const Retailer_wallet=require('../Retailer_Models/wallet')
 const verify_firebase = require("../Middleware/verify-firebase");
 const router = express.Router();
 
@@ -10,6 +11,7 @@ const router = express.Router();
  * @access  Protected (Firebase token required)
  */
 router.post("/register_retailer", verify_firebase, async (req, res) => {
+  // router.post("/register_retailer", async (req, res) => {
   try {
     const {
       shop_name,
@@ -26,7 +28,7 @@ router.post("/register_retailer", verify_firebase, async (req, res) => {
     } = req.body;
 
     const { email } = req.user; // Decoded from Firebase token
-
+      // const email="c.rajat1006@gmail.com"
     // ✅ Validate required fields
     if (!shop_name || !owner_name || !phone) {
       return res.status(400).json({
@@ -54,8 +56,15 @@ router.post("/register_retailer", verify_firebase, async (req, res) => {
         state,
         pincode,
       });
-
       await retailer.save();
+
+      // ✅ Create wallet for retailer
+      const wallet = new Retailer_wallet({
+        retailer: retailer._id,
+        balance: 0,
+      });
+      await wallet.save();
+
     } else {
       // ✅ Update existing retailer info (optional sync behavior)
       retailer.shop_name = shop_name || retailer.shop_name;

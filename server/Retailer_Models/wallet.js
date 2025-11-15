@@ -1,21 +1,21 @@
-// models/wallet.js
+// models/retailerWallet.js
 const mongoose = require("mongoose");
 
-const walletSchema = new mongoose.Schema({
-  user: {
+const retailerWalletSchema = new mongoose.Schema({
+  retailer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "auth", // your user model name
+    ref: "Retailer", // your retailer model name
     required: true,
-    unique: true, // each user has exactly one wallet
+    unique: true, // each retailer gets exactly one wallet
   },
   balance: {
     type: Number,
-    default: 0, // start with 0
+    default: 0, // initial balance
     min: 0,
   },
   currency: {
     type: String,
-    default: "INR", // or USD, depends on your region
+    default: "INR",
   },
   is_active: {
     type: Boolean,
@@ -31,10 +31,10 @@ const walletSchema = new mongoose.Schema({
   },
 });
 
-// Auto-update `updated_at` field whenever wallet is modified
-walletSchema.pre("save", function (next) {
+// Auto-update the updated_at field
+retailerWalletSchema.pre("save", function (next) {
   this.updated_at = new Date();
   next();
 });
 
-module.exports = mongoose.model("UserWallet", walletSchema);
+module.exports = mongoose.model("RetailerWallet", retailerWalletSchema);
