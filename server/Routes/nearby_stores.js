@@ -1,12 +1,18 @@
 const express = require("express");
 require("dotenv").config();
-const Retailer=require('../Retailer_Models/auth')
+const auth=require('../Models/auth')
+const Retailer=require('../Retailer_Models/auth');
+const verify_firebase = require("../Middleware/verify-firebase");
 const router = express.Router();
 
-router.post("/get_nearby_stores", async (req, res) => {
+router.post("/get_nearby_stores",verify_firebase, async (req, res) => {
     try {
-      const { latitude, longitude, radius } = req.body;
-  
+        const { latitude, longitude, radius } = req.body;
+        const { email } = req.user;
+      const user = await auth.findOne({ email });
+      if (!user) {
+        return res.status(400).json({success:false,message:"User not found"});
+      }
       if (!latitude || !longitude) {
         return res.status(400).json({
           success: false,
