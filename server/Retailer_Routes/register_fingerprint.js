@@ -4,7 +4,7 @@ const auth = require("../Models/auth");
 const crypto = require("crypto");
 const verify_firebase = require("../Middleware/verify-firebase");
 const router = express.Router();
-
+const fcm=require('../Helper/fcm')
 
 function hashCode(code) {
     return crypto.createHash("sha256").update(code).digest("hex");
@@ -59,7 +59,29 @@ router.post("/verify_code_and_register_fingerprint", async (req, res) => {
       user.code_expiry = null;
   
       await user.save();
+      
+      try {
+        if (user.device_token_mobile) {
+          await sendFCM(
+            user.device_token_mobile,
+            "Fingerprint Registered",
+            "Your fingerprint has been successfully registered."
+          );
+        }
   
+        if (user.device_token_web) {
+          await sendFCM(
+            user.device_token_web,
+            "Fingerprint Registered",
+            "Your fingerprint is now active."
+          );
+        }
+      } catch (fcmErr) {
+        console.error("FCM Error:", fcmErr);
+        // DO NOT return error → FCM is optional.
+      }
+
+
       res.status(200).json({
         success: true,
         message: "Fingerprint registered successfully",

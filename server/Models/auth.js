@@ -30,6 +30,7 @@ const userschema = mongoose.Schema({
   code_expiry: {
     type: Date,
   },
+  device_token_mobile: { type: String },
 });
 
 module.exports=mongoose.model('auth',userschema)

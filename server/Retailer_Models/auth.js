@@ -49,11 +49,23 @@ const retailerSchema = new mongoose.Schema({
   pincode: {
     type: String,
   },
-
+  device_token_mobile: { type: String },
   isActive: {
     type: Boolean,
     default: true,
   },
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      default: [0, 0],
+    },
+  },
+  
   // 🕒 Metadata
   created_at: {
     type: Date,
@@ -64,6 +76,9 @@ const retailerSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// REQUIRED for geospatial queries
+retailerSchema.index({ location: "2dsphere" });
 
 // Update timestamp automatically on save
 retailerSchema.pre("save", function (next) {

@@ -21,13 +21,10 @@ function hashCode(code) {
   return crypto.createHash("sha256").update(code).digest("hex");
 }
 
-
-
-
 router.post("/register", verify_firebase, async (req, res) => {
 //  router.post("/register", async (req, res) => {
   try {
-    const { name, fingerprint_hash,phone } = req.body;
+    const { name,phone } = req.body;
     const { email } = req.user; // decoded from Firebase token
     // const  email  = "c.rajat1006@gmail.com"; // decoded from Firebase token
     // ✅ Validate required fields
@@ -54,12 +51,6 @@ router.post("/register", verify_firebase, async (req, res) => {
         email,
         phone,
       });
-
-      // Optional fingerprint info
-      if (fingerprint_hash) {
-        user.fingerprint = fingerprint_hash;
-        user.isfingerprint_registered = true;
-      }
 
       await user.save();
       // ✅ Create wallet for this new user
@@ -123,6 +114,23 @@ router.post("/generate_code", verify_firebase, async (req, res) => {
 });
 
 
+// Save mobile token
+router.post("/save_mobile_token", verify_firebase, async (req, res) => {
+  try {
+    const { device_token } = req.body;
+    const { email } = req.user;
+    if (!device_token) return res.status(400).json({ success:false, message:'device_token required' });
 
+    const user = await auth.findOne({ email });
+    if (!user) return res.status(404).json({ success:false, message:'user not found' });
+
+    user.device_token_mobile = device_token;
+    await user.save();
+    res.json({ success:true, message:'mobile token saved' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success:false });
+  }
+});
 
 module.exports = router;

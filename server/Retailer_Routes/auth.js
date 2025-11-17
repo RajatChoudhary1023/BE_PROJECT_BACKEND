@@ -17,19 +17,17 @@ router.post("/register_retailer", verify_firebase, async (req, res) => {
       shop_name,
       owner_name,
       phone,
-      // bank_name,
-      // account_number,
-      // ifsc_code,
-      // upi_id,
       address,
       city,
       state,
       pincode,
+      lat,
+      lng,   // 👈 ADD THESE
     } = req.body;
 
-    const { email } = req.user; // Decoded from Firebase token
-      // const email="c.rajat1006@gmail.com"
-    // ✅ Validate required fields
+    const { email } = req.user;
+    // const email="sharma@gmail.com";
+
     if (!shop_name || !owner_name || !phone) {
       return res.status(400).json({
         success: false,
@@ -37,28 +35,37 @@ router.post("/register_retailer", verify_firebase, async (req, res) => {
       });
     }
 
-    // ✅ Check if retailer already exists
+    if (!lat || !lng) {
+      return res.status(400).json({
+        success: false,
+        message: "Latitude and longitude are required for retailer location",
+      });
+    }
+
     let retailer = await Retailer.findOne({ email });
 
     if (!retailer) {
-      // ✅ Create new retailer
+      // 🔹 Create new retailer
       retailer = new Retailer({
         shop_name,
         owner_name,
         email,
         phone,
-        // bank_name,
-        // account_number,
-        // ifsc_code,
-        // upi_id,
         address,
         city,
         state,
         pincode,
+
+        // 🌍 Add location coordinates
+        location: {
+          type: "Point",
+          coordinates: [lng, lat], // IMPORTANT: [longitude, latitude]
+        },
       });
+
       await retailer.save();
 
-      // ✅ Create wallet for retailer
+      // 💰 Create wallet
       const wallet = new Retailer_wallet({
         retailer: retailer._id,
         balance: 0,
@@ -66,18 +73,24 @@ router.post("/register_retailer", verify_firebase, async (req, res) => {
       await wallet.save();
 
     } else {
-      // ✅ Update existing retailer info (optional sync behavior)
+      // 🔄 Update existing retailer
       retailer.shop_name = shop_name || retailer.shop_name;
       retailer.owner_name = owner_name || retailer.owner_name;
       retailer.phone = phone || retailer.phone;
-      // retailer.bank_name = bank_name || retailer.bank_name;
-      // retailer.account_number = account_number || retailer.account_number;
-      // retailer.ifsc_code = ifsc_code || retailer.ifsc_code;
-      // retailer.upi_id = upi_id || retailer.upi_id;
+
       retailer.address = address || retailer.address;
       retailer.city = city || retailer.city;
       retailer.state = state || retailer.state;
       retailer.pincode = pincode || retailer.pincode;
+
+      // 🌍 Update location if new coords given
+      if (lat && lng) {
+        retailer.location = {
+          type: "Point",
+          coordinates: [lng, lat],
+        };
+      }
+
       retailer.isActive = true;
 
       await retailer.save();
@@ -85,17 +98,35 @@ router.post("/register_retailer", verify_firebase, async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: retailer
-        ? "Retailer registered or updated successfully"
-        : "New retailer created",
+      message: "Retailer registered or updated successfully",
       retailer,
     });
+
   } catch (error) {
     console.error("Error in /retailer/register:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
     });
+  }
+});
+
+
+router.post("/save_web_token", verify_firebase, async (req, res) => {
+  try {
+    const { device_token } = req.body;
+    const { email } = req.user;
+    if (!device_token) return res.status(400).json({ success:false, message:'device_token required' });
+
+    const user = await auth.findOne({ email });
+    if (!user) return res.status(404).json({ success:false, message:'user not found' });
+
+    user.device_token_web = device_token;
+    await user.save();
+    res.json({ success:true, message:'web token saved' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success:false });
   }
 });
 
