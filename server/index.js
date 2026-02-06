@@ -13,6 +13,7 @@ app.use('/api/nearby_stores',require('./Routes/nearby_stores'))
 app.use('/api/retailer_auth',require('./Retailer_Routes/auth'))
 app.use('/api/retailer',require('./Retailer_Routes/register_fingerprint'))
 app.use('/api/retailer/wallet',require('./Retailer_Routes/retailer_wallet'))
+app.use('/api/payment',require('./Transaction_Routes/payment'))
 // app.use('/api/Practicd',require('./Routes/Practice'))
 
 app.get('/',(req,res)=> {
