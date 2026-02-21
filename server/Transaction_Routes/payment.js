@@ -22,9 +22,9 @@ function generateIntentId() {
 router.post("/create_intent", verify_firebase, async (req, res) => {
 // router.post("/create_intent", async (req, res) => {
   try {
-    const { amount } = req.body;
+    // const { amount } = req.body;
     const { email } = req.user;
-    // const email="sharma@gmail.com"
+    // const email="rajeev@gmail.com"
 
     // 1️⃣ Validate amount
     if (!amount || amount <= 0) {

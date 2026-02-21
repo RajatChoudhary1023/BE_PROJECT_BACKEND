@@ -4,24 +4,26 @@ const verify_firebase = require("../Middleware/verify-firebase");
 const Retailer=require('../Retailer_Models/auth')
 const router = express.Router();
 const Transaction=require('../Transaction_Models/transaction')
-  router.get("/check_retailer_balance",verify_firebase,async (req,res)=> {
-    // router.get("/check_retailer_balance",async (req,res)=> {
+router.get("/check_retailer_balance", verify_firebase, async (req, res) => {
+  // router.get("/check_retailer_balance",async (req,res)=> {
 
-    // const  email ="sharma@gmail.com"
-    const { email }=req.user
-    const user=await Retailer.findOne({ email })
-    if (!user) {
-      return res.status(404).json({success:"false",message:"User not found"})
-    }
-    const wallet=await Wallet.findOne({retailer:user._id})
-    const balance=wallet.balance;
-    return res.status(500).json({success:true,balance:balance})
-  })
+  // const  email ="sharma@gmail.com"
+  const { email } = req.user
+  const user = await Retailer.findOne({ email })
+  if (!user) {
+    return res.status(404).json({ success: "false", message: "User not found" })
+  }
+  const wallet = await Wallet.findOne({ retailer: user._id })
+  const balance = wallet.balance;
+  return res.status(200).json({ success: true, balance: balance })
+})
 
 router.post("/add_to_retailer_wallet",verify_firebase,async (req, res) => {
+  // router.post("/add_to_retailer_wallet",async (req, res) => {
     try {
       const { amount } = req.body;
       const { email } = req.user;
+      // const email="sharma@gmail.com"
 
       // Validate amount
       if (!amount || amount <= 0) {
