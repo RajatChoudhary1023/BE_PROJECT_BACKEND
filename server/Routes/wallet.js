@@ -4,6 +4,7 @@ const verify_firebase = require("../Middleware/verify-firebase");
 const auth = require("../Models/auth");
 const Transaction = require("../Transaction_Models/transaction")
 const router = express.Router();
+const { sendFCM } = require("../Helper/fcm");
 
 router.post("/add_to_wallet", verify_firebase, async (req, res) => {
   // router.post("/add_to_wallet", async (req, res) => {
@@ -95,6 +96,20 @@ router.get("/check_balance", verify_firebase, async (req, res) => {
   }
   const wallet = await Wallet.findOne({ user: user._id })
   const balance = wallet.balance;
+  // 🔔 Send FCM (Testing Purpose)
+  try{
+  if (user.device_token_mobile) {
+    await sendFCM(
+      user.device_token_mobile,
+      "Balance Checked",
+      `Your current balance is ₹${balance}`,
+      { type: "BALANCE_CHECK" }
+    );
+  }
+  } catch (e) {
+  console.error("FCM failed but balance returned:", e.message);
+}
+
   return res.status(200).json({ success: true, balance: balance })
 })
 

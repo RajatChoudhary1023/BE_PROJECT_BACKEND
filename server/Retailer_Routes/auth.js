@@ -122,6 +122,9 @@ router.post("/save_web_token", verify_firebase, async (req, res) => {
     if (!user) return res.status(404).json({ success:false, message:'user not found' });
 
     user.device_token_web = device_token;
+    if (user.device_token_web !== device_token) {
+      user.device_token_web = device_token;
+    }
     await user.save();
     res.json({ success:true, message:'web token saved' });
   } catch (err) {

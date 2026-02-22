@@ -124,7 +124,9 @@ router.post("/save_mobile_token", verify_firebase, async (req, res) => {
     const user = await auth.findOne({ email });
     if (!user) return res.status(404).json({ success:false, message:'user not found' });
 
-    user.device_token_mobile = device_token;
+    if (user.device_token_mobile !== device_token) {
+      user.device_token_mobile = device_token;
+    }
     await user.save();
     res.json({ success:true, message:'mobile token saved' });
   } catch (err) {
