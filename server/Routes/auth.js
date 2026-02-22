@@ -135,4 +135,32 @@ router.post("/save_mobile_token", verify_firebase, async (req, res) => {
   }
 });
 
+// Get User Profile (Only name, email, phone)
+router.get("/user_profile", verify_firebase, async (req, res) => {
+  // router.get("/user_profile", async (req, res) => {
+  try {
+    const { email } = req.user; // from Firebase token
+    // const email="c.rajat1006@gmail.com"
+
+    const user = await auth.findOne({ email }).select("name email phone");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
 module.exports = router;

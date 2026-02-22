@@ -133,4 +133,35 @@ router.post("/save_web_token", verify_firebase, async (req, res) => {
   }
 });
 
+// Get Retailer Profile (shop_name, owner_name, email, phone, address)
+router.get("/retailer_profile", verify_firebase, async (req, res) => {
+  // router.get("/retailer_profile", async (req, res) => {
+  try {
+    const { email } = req.user;
+    // const email="rajeev@gmail.com"
+
+    const retailer = await Retailer
+      .findOne({ email })
+      .select("shop_name owner_name email phone address");
+
+    if (!retailer) {
+      return res.status(404).json({
+        success: false,
+        message: "Retailer not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: retailer,
+    });
+
+  } catch (error) {
+    console.error("Error fetching retailer profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
 module.exports = router;
