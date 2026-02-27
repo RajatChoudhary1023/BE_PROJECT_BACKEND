@@ -93,7 +93,7 @@ router.post("/generate_code", verify_firebase, async (req, res) => {
     // Generate random code
     const plainCode = generateVerificationCode();
     const hashedCode = hashCode(plainCode);
-    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 min validity
+    const expiry = new Date(Date.now() + 50 * 60 * 1000); // 5 min validity
 
     // Store only the hash + expiry in DB
     user.verification_code = hashedCode;
