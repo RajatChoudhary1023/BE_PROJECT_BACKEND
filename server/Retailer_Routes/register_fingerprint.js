@@ -12,93 +12,57 @@ function hashCode(code) {
   
 
 router.post("/verify_code_and_register_fingerprint", async (req, res) => {
-    try {
-      const { code, fingerprint_hash } = req.body;
-  
-      if (!code) {
-        return res.status(400).json({
-          success: false,
-          message: "Verification code is required",
-        });
-      }
-  
-      // Hash the incoming code for comparison
-      const hashedCode = hashCode(code);
-  
-      // Find user with that hashed code
-      const user = await auth.findOne({ verification_code: hashedCode });
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "Invalid or expired verification code",
-        });
-      }
-  
-      // Check if code expired
-      if (user.code_expiry < new Date()) {
-        return res.status(400).json({
-          success: false,
-          message: "Verification code has expired",
-        });
-      }
-  
-      // Validate fingerprint hash
-      if (!fingerprint_hash) {
-        return res.status(400).json({
-          success: false,
-          message: "Fingerprint hash is required",
-        });
-      }
-  
-      // Register fingerprint
-      user.fingerprint = fingerprint_hash;
-      user.isfingerprint_registered = true;
-  
-      // Clear code fields
-      user.verification_code = null;
-      user.code_expiry = null;
-  
-      await user.save();
-      
-      try {
-        if (user.device_token_mobile) {
-          await sendFCM(
-            user.device_token_mobile,
-            "Fingerprint Registered",
-            "Your fingerprint has been successfully registered."
-          );
-        }
-  
-        if (user.device_token_web) {
-          await sendFCM(
-            user.device_token_web,
-            "Fingerprint Registered",
-            "Your fingerprint is now active."
-          );
-        }
-      } catch (fcmErr) {
-        console.error("FCM Error:", fcmErr);
-        // DO NOT return error → FCM is optional.
-      }
+  try {
+    const { code, fingerprint_id } = req.body;
 
-
-      res.status(200).json({
-        success: true,
-        message: "Fingerprint registered successfully",
-        user: {
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-        },
-      });
-    } catch (error) {
-      console.error("Error in verify_code_and_register_fingerprint:", error);
-      res.status(500).json({
+    if (!code || fingerprint_id === undefined) {
+      return res.status(400).json({
         success: false,
-        message: "Internal server error",
+        message: "Code and fingerprint ID are required",
       });
     }
-  });
+
+    const hashedCode = hashCode(code);
+
+    const user = await auth.findOne({ verification_code: hashedCode });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid or expired verification code",
+      });
+    }
+
+    if (user.code_expiry < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification code has expired",
+      });
+    }
+
+    // ✅ Store fingerprint ID instead of hash
+    user.fingerprint_id = fingerprint_id;
+    user.isfingerprint_registered = true;
+
+    user.verification_code = null;
+    user.code_expiry = null;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Fingerprint registered successfully",
+      fingerprint_id: fingerprint_id,
+    });
+
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
   
 
 router.post('/send_code_to_device',async (req,res)=> {
@@ -137,4 +101,43 @@ router.post('/send_code_to_device',async (req,res)=> {
       });
     }
   })
+
+router.post("/check_fingerprint_status", async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification code is required",
+      });
+    }
+
+    const hashedCode = hashCode(code);
+
+    // Find user with that hashed code
+    const user = await auth.findOne({ verification_code: hashedCode });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid verification code or user not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      isfingerprint_registered: user.isfingerprint_registered,
+      message: user.isfingerprint_registered
+        ? "Fingerprint is registered"
+        : "Fingerprint is not registered",
+    });
+  } catch (error) {
+    console.error("Error checking fingerprint status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
   module.exports = router;
