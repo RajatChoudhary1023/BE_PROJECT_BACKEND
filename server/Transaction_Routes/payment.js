@@ -305,5 +305,34 @@ router.get("/intent/:intent_id", async (req, res) => {
   }
 });
 
+/**
+ * @route   POST /payment/device_fingerprint
+ * @desc    Receive fingerprint ID from device
+ * @access  Public (device)
+ */
+router.post("/device_fingerprint", async (req, res) => {
+  try {
+    const { fingerprint_id } = req.body;
 
+    if (fingerprint_id === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "fingerprint_id is required",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Fingerprint received successfully",
+      fingerprint_id: fingerprint_id,
+    });
+
+  } catch (error) {
+    console.error("Error receiving fingerprint from device:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
 module.exports = router;

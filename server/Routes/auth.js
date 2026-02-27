@@ -163,4 +163,34 @@ router.get("/user_profile", verify_firebase, async (req, res) => {
     });
   }
 });
+
+router.get("/fingerprint_status", verify_firebase, async (req, res) => {
+  try {
+    const { email } = req.user; // from Firebase token
+
+    const user = await auth
+      .findOne({ email })
+      .select("isfingerprint_registered fingerprint_id");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        isFingerprintRegistered: user.isfingerprint_registered,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching fingerprint status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
 module.exports = router;
