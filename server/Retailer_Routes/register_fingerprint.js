@@ -101,7 +101,7 @@ router.post("/verify_code_and_register_fingerprint", async (req, res) => {
   });
   
 
-  router.post('/send_code_to_device',async (req,res)=> {
+router.post('/send_code_to_device',async (req,res)=> {
     try {
       const {code}=req.body;
       if (!code) {

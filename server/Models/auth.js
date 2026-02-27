@@ -17,8 +17,9 @@ const userschema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  fingerprint: {
-    type: String,
+  fingerprint_id: {
+    type: Number,
+    unique: true,
   },
   isfingerprint_registered:{
     type:Boolean,
