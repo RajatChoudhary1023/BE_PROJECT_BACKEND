@@ -15,11 +15,17 @@ const verify_firebase = require("../Middleware/verify-firebase");
  * GET /analytics/user/summary
  */
 router.get("/user/summary", verify_firebase, async (req, res) => {
-    // router.get("/user/summary", async (req, res) => {
   try {
     const { email } = req.user;
-    // const email="c.rajat1006@gmail.com"
-    const user = await User.findOne({ email });
+
+    const user = await User.findOne({ email }).select("name phone");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     const result = await Transaction.aggregate([
       { $match: { from_user: user._id, status: "SUCCESS" } },
@@ -35,6 +41,10 @@ router.get("/user/summary", verify_firebase, async (req, res) => {
 
     res.json({
       success: true,
+      user: {
+        name: user.name,
+        phone: user.phone,
+      },
       total_spent: result[0]?.total_spent || 0,
       total_transactions: result[0]?.total_transactions || 0,
       average_transaction: Math.round(result[0]?.average_transaction || 0),
