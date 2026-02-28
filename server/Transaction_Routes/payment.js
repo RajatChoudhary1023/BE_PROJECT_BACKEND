@@ -9,6 +9,8 @@ const Transaction = require("../Transaction_Models/transaction");
 const UserWallet = require("../Models/wallet"); // user wallet
 const RetailerWallet = require("../Retailer_Models/wallet"); // retailer wallet
 
+let latestFingerprint = null;
+
 // Utility to generate intent id
 function generateIntentId() {
   return "PI_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
@@ -79,18 +81,26 @@ router.post("/create_intent", verify_firebase, async (req, res) => {
  */
 router.post("/authorize", async (req, res) => {
   try {
-    const { intent_id, fingerprint_ref } = req.body;
+    const { intent_id } = req.body;
 
     // 1️⃣ Validate input
-    if (!intent_id || fingerprint_ref === undefined) {
+    if (!intent_id) {
       return res.status(400).json({
         success: false,
-        message: "intent_id and fingerprint_ref are required",
+        message: "intent_id is required",
+      });
+    }
+        // Use stored fingerprint
+    if (!latestFingerprint) {
+      return res.status(400).json({
+        success: false,
+        message: "No fingerprint received from device",
       });
     }
 
     // Convert fingerprint to number
-    const fingerprintNumber = Number(fingerprint_ref);
+    const fingerprintNumber = latestFingerprint;
+    latestFingerprint = null;
 
     if (isNaN(fingerprintNumber)) {
       return res.status(400).json({
@@ -334,7 +344,8 @@ router.post("/device_fingerprint", async (req, res) => {
         message: "fingerprint_id is required",
       });
     }
-
+    // Store globally
+    latestFingerprint = Number(fingerprint_id);
     return res.status(200).json({
       success: true,
       message: "Fingerprint received successfully",
