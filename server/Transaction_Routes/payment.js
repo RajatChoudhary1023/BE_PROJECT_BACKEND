@@ -9,8 +9,6 @@ const Transaction = require("../Transaction_Models/transaction");
 const UserWallet = require("../Models/wallet"); // user wallet
 const RetailerWallet = require("../Retailer_Models/wallet"); // retailer wallet
 
-let latestFingerprint = null;
-
 // Utility to generate intent id
 function generateIntentId() {
   return "PI_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
@@ -79,47 +77,123 @@ router.post("/create_intent", verify_firebase, async (req, res) => {
  * @desc    Authorize payment intent using fingerprint (static for now)
  * @access  Public (device)
  */
+// router.post("/authorize", async (req, res) => {
+//   try {
+//     const { intent_id } = req.body;
+
+//     // 1️⃣ Validate input
+//     if (!intent_id) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "intent_id is required",
+//       });
+//     }
+//         // Use stored fingerprint
+//     if (!latestFingerprint) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "No fingerprint received from device",
+//       });
+//     }
+
+//     // Convert fingerprint to number
+//     const fingerprintNumber = latestFingerprint;
+//     latestFingerprint = null;
+
+//     if (isNaN(fingerprintNumber)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid fingerprint reference",
+//       });
+//     }
+
+//     // 2️⃣ Find payment intent
+//     const intent = await PaymentIntent.findOne({ intent_id });
+
+//     if (!intent) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Payment intent not found",
+//       });
+//     }
+
+//     // 3️⃣ Check intent status
+//     if (intent.status !== "CREATED") {
+//       return res.status(400).json({
+//         success: false,
+//         message: `Intent cannot be authorized (status: ${intent.status})`,
+//       });
+//     }
+
+//     // 4️⃣ Check expiry
+//     if (intent.expires_at && intent.expires_at < new Date()) {
+//       intent.status = "EXPIRED";
+//       await intent.save();
+
+//       return res.status(400).json({
+//         success: false,
+//         message: "Payment intent has expired",
+//       });
+//     }
+
+//     // 5️⃣ Find user by fingerprint
+//     const user = await User.findOne({
+//       fingerprint_id: fingerprintNumber,
+//       isfingerprint_registered: true,
+//     });
+
+//     if (!user) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "Fingerprint not recognized",
+//       });
+//     }
+
+//     // 6️⃣ Authorize intent
+//     intent.user = user._id;
+//     intent.status = "AUTHORIZED";
+//     intent.authorized_at = new Date();
+
+//     await intent.save();
+
+//     // 7️⃣ Success response
+//     return res.status(200).json({
+//       success: true,
+//       message: "Payment intent authorized via fingerprint",
+//       intent_id: intent.intent_id,
+//       amount: intent.amount,
+//       user: {
+//         id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         phone: user.phone,
+//       },
+//     });
+
+//   } catch (error) {
+//     console.error("Error authorizing payment intent:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// });
+
 router.post("/authorize", async (req, res) => {
   try {
     const { intent_id } = req.body;
 
-    // 1️⃣ Validate input
     if (!intent_id) {
-      return res.status(400).json({
-        success: false,
-        message: "intent_id is required",
-      });
-    }
-        // Use stored fingerprint
-    if (!latestFingerprint) {
-      return res.status(400).json({
-        success: false,
-        message: "No fingerprint received from device",
-      });
+      return res.status(400).json({ success: false, message: "intent_id is required" });
     }
 
-    // Convert fingerprint to number
-    const fingerprintNumber = latestFingerprint;
-    latestFingerprint = null;
-
-    if (isNaN(fingerprintNumber)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid fingerprint reference",
-      });
-    }
-
-    // 2️⃣ Find payment intent
+    // 1️⃣ Find intent
     const intent = await PaymentIntent.findOne({ intent_id });
-
     if (!intent) {
-      return res.status(404).json({
-        success: false,
-        message: "Payment intent not found",
-      });
+      return res.status(404).json({ success: false, message: "Payment intent not found" });
     }
 
-    // 3️⃣ Check intent status
+    // 2️⃣ Check status
     if (intent.status !== "CREATED") {
       return res.status(400).json({
         success: false,
@@ -127,59 +201,52 @@ router.post("/authorize", async (req, res) => {
       });
     }
 
-    // 4️⃣ Check expiry
+    // 3️⃣ Check expiry
     if (intent.expires_at && intent.expires_at < new Date()) {
       intent.status = "EXPIRED";
       await intent.save();
+      return res.status(400).json({ success: false, message: "Payment intent has expired" });
+    }
 
+    // 4️⃣ Check fingerprint was received
+    if (intent.fingerprint_id === null || intent.fingerprint_id === undefined) {
       return res.status(400).json({
         success: false,
-        message: "Payment intent has expired",
+        message: "No fingerprint received for this intent yet",
       });
     }
 
-    // 5️⃣ Find user by fingerprint
+    // 5️⃣ Match fingerprint to user
     const user = await User.findOne({
-      fingerprint_id: fingerprintNumber,
+      fingerprint_id: intent.fingerprint_id,
       isfingerprint_registered: true,
     });
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Fingerprint not recognized",
-      });
+      return res.status(401).json({ success: false, message: "Fingerprint not recognized" });
     }
 
-    // 6️⃣ Authorize intent
+    // 6️⃣ Authorize
     intent.user = user._id;
     intent.status = "AUTHORIZED";
     intent.authorized_at = new Date();
-
+    intent.fingerprint_id = null; // clear after use
     await intent.save();
 
-    // 7️⃣ Success response
     return res.status(200).json({
       success: true,
       message: "Payment intent authorized via fingerprint",
       intent_id: intent.intent_id,
       amount: intent.amount,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-      },
+      user: { id: user._id, name: user.name, email: user.email, phone: user.phone },
     });
 
   } catch (error) {
     console.error("Error authorizing payment intent:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
+
 /**
  * @route   POST /payment/settle
  * @desc    Settle authorized payment intent (wallet transfer)
@@ -334,26 +401,93 @@ router.get("/intent/:intent_id", async (req, res) => {
  * @desc    Receive fingerprint ID from device
  * @access  Public (device)
  */
+// router.post("/device_fingerprint", async (req, res) => {
+//   try {
+//     const { fingerprint_id } = req.body;
+
+//     if (fingerprint_id === undefined) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "fingerprint_id is required",
+//       });
+//     }
+//     // Store globally
+//     latestFingerprint = Number(fingerprint_id);
+//     return res.status(200).json({
+//       success: true,
+//       message: "Fingerprint received successfully",
+//       fingerprint_id: fingerprint_id,
+//     });
+
+//   } catch (error) {
+//     console.error("Error receiving fingerprint from device:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// });
+
 router.post("/device_fingerprint", async (req, res) => {
   try {
-    const { fingerprint_id } = req.body;
+    const { fingerprint_id, intent_id } = req.body;
 
-    if (fingerprint_id === undefined) {
+    if (fingerprint_id === undefined || !intent_id) {
       return res.status(400).json({
         success: false,
-        message: "fingerprint_id is required",
+        message: "fingerprint_id and intent_id are required",
       });
     }
-    // Store globally
-    latestFingerprint = Number(fingerprint_id);
+
+    const intent = await PaymentIntent.findOne({ intent_id, status: "CREATED" });
+    if (!intent) {
+      return res.status(404).json({
+        success: false,
+        message: "No active intent found for this intent_id",
+      });
+    }
+
+    intent.fingerprint_id = Number(fingerprint_id);
+    await intent.save();
+
     return res.status(200).json({
       success: true,
-      message: "Fingerprint received successfully",
-      fingerprint_id: fingerprint_id,
+      message: "Fingerprint stored against intent",
     });
 
   } catch (error) {
-    console.error("Error receiving fingerprint from device:", error);
+    console.error("Error receiving fingerprint:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+/**
+ * @route   GET /payment/device/next_intent
+ * @desc    Device fetches latest CREATED payment intent
+ * @access  Public (device)
+ */
+router.get("/device/next_intent", async (req, res) => {
+  try {
+    const intent = await PaymentIntent.findOne({
+      status: "CREATED",
+    }).sort({ createdAt: -1 });
+
+    if (!intent) {
+      return res.status(404).json({
+        success: false,
+        message: "No active payment intent",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      intent_id: intent.intent_id,
+      amount: intent.amount,
+      expires_at: intent.expires_at,
+    });
+
+  } catch (error) {
+    console.error("Error fetching next intent:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

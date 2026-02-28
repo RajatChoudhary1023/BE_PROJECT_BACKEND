@@ -19,7 +19,7 @@ const paymentIntentSchema = new mongoose.Schema({
     ref: "auth",
     default: null, // user linked only after fingerprint auth
   },
-
+  fingerprint_id: { type: Number, default: null },
   amount: {
     type: Number,
     required: true,
