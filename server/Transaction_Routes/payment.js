@@ -81,14 +81,25 @@ router.post("/authorize", async (req, res) => {
   try {
     const { intent_id, fingerprint_ref } = req.body;
 
-    if (!intent_id || !fingerprint_ref) {
+    // 1️⃣ Validate input
+    if (!intent_id || fingerprint_ref === undefined) {
       return res.status(400).json({
         success: false,
         message: "intent_id and fingerprint_ref are required",
       });
     }
 
-    // 1️⃣ Find intent
+    // Convert fingerprint to number
+    const fingerprintNumber = Number(fingerprint_ref);
+
+    if (isNaN(fingerprintNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid fingerprint reference",
+      });
+    }
+
+    // 2️⃣ Find payment intent
     const intent = await PaymentIntent.findOne({ intent_id });
 
     if (!intent) {
@@ -98,7 +109,7 @@ router.post("/authorize", async (req, res) => {
       });
     }
 
-    // 2️⃣ Check intent status
+    // 3️⃣ Check intent status
     if (intent.status !== "CREATED") {
       return res.status(400).json({
         success: false,
@@ -106,8 +117,8 @@ router.post("/authorize", async (req, res) => {
       });
     }
 
-    // 3️⃣ Check expiry
-    if (intent.expires_at < new Date()) {
+    // 4️⃣ Check expiry
+    if (intent.expires_at && intent.expires_at < new Date()) {
       intent.status = "EXPIRED";
       await intent.save();
 
@@ -117,9 +128,9 @@ router.post("/authorize", async (req, res) => {
       });
     }
 
-    // 4️⃣ Find user by fingerprint (STATIC for now)
+    // 5️⃣ Find user by fingerprint
     const user = await User.findOne({
-      fingerprint: fingerprint_ref,
+      fingerprint_id: fingerprintNumber,
       isfingerprint_registered: true,
     });
 
@@ -130,20 +141,24 @@ router.post("/authorize", async (req, res) => {
       });
     }
 
-    // 5️⃣ Authorize intent
+    // 6️⃣ Authorize intent
     intent.user = user._id;
     intent.status = "AUTHORIZED";
+    intent.authorized_at = new Date();
+
     await intent.save();
 
-    // 6️⃣ Respond
+    // 7️⃣ Success response
     return res.status(200).json({
       success: true,
       message: "Payment intent authorized via fingerprint",
       intent_id: intent.intent_id,
       amount: intent.amount,
       user: {
+        id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
       },
     });
 
@@ -155,7 +170,6 @@ router.post("/authorize", async (req, res) => {
     });
   }
 });
-
 /**
  * @route   POST /payment/settle
  * @desc    Settle authorized payment intent (wallet transfer)
