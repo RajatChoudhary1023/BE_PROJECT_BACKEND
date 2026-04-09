@@ -17,6 +17,9 @@ const userschema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  profile_image: {
+    type: String, // Cloudinary URL
+  },
   fingerprint_id: {
     type: Number,
     unique: true,
