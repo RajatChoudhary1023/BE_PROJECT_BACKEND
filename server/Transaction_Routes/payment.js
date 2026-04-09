@@ -238,7 +238,7 @@ router.post("/authorize", async (req, res) => {
       message: "Payment intent authorized via fingerprint",
       intent_id: intent.intent_id,
       amount: intent.amount,
-      user: { id: user._id, name: user.name, email: user.email, phone: user.phone },
+      user: { id: user._id, name: user.name, email: user.email, phone: user.phone, profile_image: user.profile_image },
     });
 
   } catch (error) {
