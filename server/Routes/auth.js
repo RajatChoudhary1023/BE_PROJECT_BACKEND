@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const auth = require("../Models/auth");
 const Wallet=require('../Models/wallet')
 const verify_firebase = require("../Middleware/verify-firebase");
+const upload = require("../middleware/upload");
 const router = express.Router();
 
 // Helper function to generate 6-character alphanumeric code
@@ -193,4 +194,46 @@ router.get("/fingerprint_status", verify_firebase, async (req, res) => {
     });
   }
 });
+
+router.post("/upload-profile-image",verify_firebase,upload.single("image"),async (req, res) => {
+    try {
+      const { email } = req.user;
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Image file is required",
+        });
+      }
+
+      const imageUrl = req.file.path;
+
+      // 🔹 OPTIONAL: Save to user
+      const user = await auth.findOne({ email });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      user.profile_image = imageUrl;
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Image uploaded successfully",
+        profile_image: imageUrl,
+      });
+
+    } catch (error) {
+      console.error("Error in /upload-profile-image:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+);
 module.exports = router;
