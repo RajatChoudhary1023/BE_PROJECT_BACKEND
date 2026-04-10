@@ -44,6 +44,7 @@ router.get("/user/summary", verify_firebase, async (req, res) => {
       user: {
         name: user.name,
         phone: user.phone,
+        profile_image:user.profile_image
       },
       total_spent: result[0]?.total_spent || 0,
       total_transactions: result[0]?.total_transactions || 0,
