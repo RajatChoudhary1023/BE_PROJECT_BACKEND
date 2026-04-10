@@ -78,7 +78,7 @@ router.post("/register", upload.single("image"), verify_firebase, async (req, re
     console.error("Error in /register:", error);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      error:error,
     });
   }
 });
