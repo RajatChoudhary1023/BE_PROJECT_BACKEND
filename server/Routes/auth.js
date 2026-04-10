@@ -4,7 +4,7 @@ const crypto = require("crypto");
 const auth = require("../Models/auth");
 const Wallet=require('../Models/wallet')
 const verify_firebase = require("../Middleware/verify-firebase");
-const upload = require("../middleware/upload");
+const upload = require("../Middleware/upload");
 const router = express.Router();
 
 // Helper function to generate 6-character alphanumeric code
