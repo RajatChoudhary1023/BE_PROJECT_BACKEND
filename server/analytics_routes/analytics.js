@@ -18,7 +18,7 @@ router.get("/user/summary", verify_firebase, async (req, res) => {
   try {
     const { email } = req.user;
 
-    const user = await User.findOne({ email }).select("name phone");
+    const user = await User.findOne({ email }).select("name phone profile_image");
 
     if (!user) {
       return res.status(404).json({
