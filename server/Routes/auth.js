@@ -143,7 +143,7 @@ router.get("/user_profile", verify_firebase, async (req, res) => {
     const { email } = req.user; // from Firebase token
     // const email="c.rajat1006@gmail.com"
 
-    const user = await auth.findOne({ email }).select("name email phone");
+    const user = await auth.findOne({ email }).select("name email phone profile_image");
 
     if (!user) {
       return res.status(404).json({
