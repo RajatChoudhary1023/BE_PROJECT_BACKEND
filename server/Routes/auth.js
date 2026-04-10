@@ -21,12 +21,12 @@ function hashCode(code) {
   return crypto.createHash("sha256").update(code).digest("hex");
 }
 
-router.post("/register", verify_firebase, async (req, res) => {
-//  router.post("/register", async (req, res) => {
+// router.post("/register", verify_firebase, async (req, res) => {
+ router.post("/register", async (req, res) => {
   try {
     const { name,phone } = req.body;
-    const { email } = req.user; // decoded from Firebase token
-    // const  email  = "c.rajat1006@gmail.com"; // decoded from Firebase token
+    // const { email } = req.user; // decoded from Firebase token
+    const  email  = "pqrstu123@gmail.com"; // decoded from Firebase token
     // ✅ Validate required fields
     if (!name) {
       return res.status(400).json({

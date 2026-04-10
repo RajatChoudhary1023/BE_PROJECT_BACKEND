@@ -22,7 +22,6 @@ const userschema = mongoose.Schema({
   },
   fingerprint_id: {
     type: Number,
-    unique: true,
   },
   isfingerprint_registered:{
     type:Boolean,
