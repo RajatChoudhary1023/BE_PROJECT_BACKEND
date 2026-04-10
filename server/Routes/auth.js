@@ -74,13 +74,23 @@ router.post("/register", upload.single("image"), verify_firebase, async (req, re
         : "New user created",
       user,
     });
+  // } catch (error) {
+  //   console.error("Error in /register:", error);
+  //   res.status(500).json({
+  //     success: false,
+  //     error:error.message,
+  //   });
+  // }
   } catch (error) {
-    console.error("Error in /register:", error);
-    res.status(500).json({
-      success: false,
-      error:error,
-    });
-  }
+      console.error("🔥 FULL ERROR:", error);
+      console.error("🔥 MESSAGE:", error.message);
+      console.error("🔥 STACK:", error.stack);
+
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
 });
 
 
