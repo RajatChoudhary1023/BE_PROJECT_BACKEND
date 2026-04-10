@@ -22,7 +22,7 @@ function hashCode(code) {
   return crypto.createHash("sha256").update(code).digest("hex");
 }
 
-router.post("/register", verify_firebase, upload.single("image"), async (req, res) => {
+router.post("/register", upload.single("image"), verify_firebase, async (req, res) => {
 //  router.post("/register", async (req, res) => {
   try {
     const { name,phone } = req.body;
@@ -65,6 +65,8 @@ router.post("/register", verify_firebase, upload.single("image"), async (req, re
       await wallet.save();
     }
 
+    console.log("FILE:", req.file);
+    console.log("BODY:", req.body);
     res.status(201).json({
       success: true,
       message: user
