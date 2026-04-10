@@ -22,14 +22,12 @@ function hashCode(code) {
   return crypto.createHash("sha256").update(code).digest("hex");
 }
 
-router.post("/register", upload.single("image"), verify_firebase, async (req, res) => {
+router.post("/register", verify_firebase, async (req, res) => {
 //  router.post("/register", async (req, res) => {
   try {
     const { name,phone } = req.body;
     const { email } = req.user; // decoded from Firebase token
     // const  email  = "c.rajat1006@gmail.com"; // decoded from Firebase token
-      // ✅ Get image URL from Cloudinary
-      const profile_image = req.file?.path;
     // ✅ Validate required fields
     if (!name) {
       return res.status(400).json({
@@ -53,7 +51,6 @@ router.post("/register", upload.single("image"), verify_firebase, async (req, re
         name,
         email,
         phone,
-        profile_image,
       });
 
       await user.save();
@@ -65,8 +62,6 @@ router.post("/register", upload.single("image"), verify_firebase, async (req, re
       await wallet.save();
     }
 
-    console.log("FILE:", req.file);
-    console.log("BODY:", req.body);
     res.status(201).json({
       success: true,
       message: user
@@ -74,23 +69,13 @@ router.post("/register", upload.single("image"), verify_firebase, async (req, re
         : "New user created",
       user,
     });
-  // } catch (error) {
-  //   console.error("Error in /register:", error);
-  //   res.status(500).json({
-  //     success: false,
-  //     error:error.message,
-  //   });
-  // }
   } catch (error) {
-      console.error("🔥 FULL ERROR:", error);
-      console.error("🔥 MESSAGE:", error.message);
-      console.error("🔥 STACK:", error.stack);
-
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
+    console.error("Error in /register:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 });
 
 
